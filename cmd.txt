@@ -1,4 +1,0 @@
-gcc -g -Wall -Werror  -c -o disk.o disk/disk.c
-gcc -g -Wall -Werror  -c -o file.o io/file.c
-gcc -g -Wall -Werror  -o apps/test1 apps/test1.c disk.o file.o
-./apps/test1 ./disk/vdisk 10
