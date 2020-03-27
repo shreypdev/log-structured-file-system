@@ -8,6 +8,7 @@
 void do_debug(struct Disk *disk, int args, char *arg1, char *arg2);
 void do_format(struct Disk *disk, int args, char *arg1, char *arg2);
 void do_mount(struct Disk *disk, int args, char *arg1, char *arg2);
+void do_unmount(struct Disk *disk, int args, char *arg1, char *arg2);
 
 // Main execution
 int main(int argc, char *argv[]) {
@@ -45,6 +46,8 @@ int main(int argc, char *argv[]) {
             do_format(&disk, args, arg1, arg2);
         } else if (streq(cmd, "mount")) {
             do_mount(&disk, args, arg1, arg2);
+        } else if (streq(cmd, "unmount")) {
+            do_unmount(&disk, args, arg1, arg2);
         }
     }
 
@@ -85,5 +88,18 @@ void do_mount(struct Disk *disk, int args, char *arg1, char *arg2) {
     	printf("disk mounted.\n");
     } else {
     	printf("mount failed!\n");
+    }
+}
+
+void do_unmount(struct Disk *disk, int args, char *arg1, char *arg2) {
+    if (args != 1) {
+    	printf("Usage: unmount\n");
+    	return;
+    }
+
+    if (unmount(disk)) {
+    	printf("disk unmounted.\n");
+    } else {
+    	printf("unmount failed!\n");
     }
 }

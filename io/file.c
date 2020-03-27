@@ -171,3 +171,15 @@ bool mount(struct Disk *disk) {
     return true;
 }
 
+bool unmount(struct Disk *disk) {
+    
+    if (!fileSystemDisk){
+        return false;
+    }
+
+    // Set device and mount
+    fileSystemDisk = NULL;
+    unmountDisk(disk);
+    return true;
+
+}

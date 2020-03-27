@@ -25,7 +25,7 @@ typedef struct {
     uint32_t Valid;		// Whether or not inode is valid
     uint32_t Size;		// Size of file
     uint32_t Flag;
-    uint32_t children[10];
+    uint32_t children[16];
     int Direct[POINTERS_PER_INODE]; // Direct pointers
     uint32_t Indirect;	// Indirect pointer
 } Inode;
@@ -48,6 +48,7 @@ void debug(struct Disk *disk);
 bool format(struct Disk *disk);
 
 bool mount(struct Disk *disk);
+bool unmount(struct Disk *disk);
 
 void initialize_inode(Inode node);
 bool load_inode(size_t inumber, Inode node);   
