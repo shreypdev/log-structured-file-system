@@ -2,7 +2,7 @@
 
 void intiDisk(struct Disk *disk) {
    disk->FileDescriptor = 0;
-   disk->Blocks = 9;
+   disk->Blocks = 0;
    disk->Reads = 0;
    disk->Writes = 0;
    disk->Mounts = 0;

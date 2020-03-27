@@ -1,7 +1,8 @@
 #include "file.h"
+
 // Debug file system -----------------------------------------------------------
 void debug(struct Disk *disk) {
-    Block block;
+    union Block block;
 
     // Read Superblock
     readDisk(disk, 0, block.Data);
@@ -15,8 +16,8 @@ void debug(struct Disk *disk) {
     printf("    %u inodes\n"         , block.Super.Inodes);
 
     // Read Inode blocks
-    Block inodeBlock;
-    uint32_t numInodes = sizeof(Block)/sizeof(Inode);
+    union Block inodeBlock;
+    uint32_t numInodes = sizeof(union Block)/sizeof(struct Inode);
     for (uint32_t i=0; i < block.Super.InodeBlocks; i++){
         readDisk(disk, i+1, inodeBlock.Data);
         for (uint32_t j=0; j< numInodes; j++){
@@ -34,14 +35,14 @@ void debug(struct Disk *disk) {
                     }
                 }
                 if (directFlag){
-                    printf("%s\n", directBlockString);;
+                    printf("%s\n", directBlockString);
                 }else{
                     printf("    direct blocks:\n");
                 }
                 if (inodeBlock.Inodes[j].Indirect) {
                     printf("    indirect block: %d\n", inodeBlock.Inodes[j].Indirect);
                     // Load Indirect Block
-                    Block indiBlock;
+                    union Block indiBlock;
                     readDisk(disk, inodeBlock.Inodes[j].Indirect, indiBlock.Data);
                     char *indiString = "    indirect data blocks:";
                     bool indiFlag = false;
@@ -53,7 +54,7 @@ void debug(struct Disk *disk) {
                         }
                     }
                     if (indiFlag) {
-                        printf("%s\n", indiString);
+                        printf("%d\n", indiFlag);
                     }
                 }
                 
@@ -69,7 +70,7 @@ bool format(struct Disk *disk) {
         return false;
     }
 
-    Block superBlock;
+    union Block superBlock;
     superBlock.Super.MagicNumber    = MAGIC_NUMBER;
     superBlock.Super.Blocks         = size(disk);
     if (size(disk)%10 == 0){
@@ -82,7 +83,7 @@ bool format(struct Disk *disk) {
     writeDisk(disk, superBlockLocation, superBlock.Data);
     
     // Clear all other blocks
-    Block emptyBlock = {0};
+    union Block emptyBlock;
     for (uint32_t i = 1; i < superBlock.Super.Blocks; i++){
         writeDisk(disk, i, emptyBlock.Data);
     }
@@ -92,14 +93,14 @@ bool format(struct Disk *disk) {
 
 // Mount file system -----------------------------------------------------------
 bool mount(struct Disk *disk) {
-    
+
     if (fileSystemDisk){
         return false;
     }   
  
     
     // Read superblock
-    Block superBlock;
+    union Block superBlock;
     readDisk(disk, 0, superBlock.Data);
     
     if (superBlock.Super.MagicNumber != MAGIC_NUMBER){
@@ -143,7 +144,7 @@ bool mount(struct Disk *disk) {
         freeBlocks[i+1] = false;
     }
 
-    Block inodeBlock;
+    union Block inodeBlock;
     for (uint32_t i = 0; i < inodeBlocks; i++){
         //std::cout << "Block num: " << i << "\n";
         readDisk(disk, i+1, inodeBlock.Data);
@@ -156,7 +157,7 @@ bool mount(struct Disk *disk) {
                 }
                 if (inodeBlock.Inodes[j].Indirect){
                     freeBlocks[inodeBlock.Inodes[j].Indirect] = false;
-                    Block indirectBlock;
+                    union Block indirectBlock;
                     readDisk(disk, inodeBlock.Inodes[j].Indirect, indirectBlock.Data);
                     for (uint32_t k = 0; k < POINTERS_PER_BLOCK; k++){
                         if (indirectBlock.Pointers[k]){
@@ -171,15 +172,46 @@ bool mount(struct Disk *disk) {
     return true;
 }
 
+// Unmount file system -----------------------------------------------------------
 bool unmount(struct Disk *disk) {
-    
+
     if (!fileSystemDisk){
         return false;
-    }
+    }   
 
     // Set device and mount
     fileSystemDisk = NULL;
     unmountDisk(disk);
     return true;
+}
 
+void initialize_inode(struct Inode *node) {
+    for (uint32_t i = 0; i < POINTERS_PER_INODE; i++) {
+        node->Direct[i] = 0;
+    }
+    node->Indirect  = 0;
+    node->Size      = 0;
+}
+
+ssize_t get_free_inode() {
+    // Locate free inode in inode table
+    ssize_t inodeNumber = -1;
+    for (uint32_t i = 0; i < inodeBlocks; i++) {
+        union Block inodeBlock;
+        readDisk(fileSystemDisk, i+1, inodeBlock.Data);
+        for (uint32_t j = 0; j < INODES_PER_BLOCK; j++){
+            if (!inodeBlock.Inodes[j].Valid){
+                inodeBlock.Inodes[j].Valid = 1;
+                initialize_inode(&inodeBlock.Inodes[j]);
+                writeDisk(fileSystemDisk, i+1, inodeBlock.Data);
+                inodeNumber = j+INODES_PER_BLOCK*i;
+                break;
+            }
+        }
+        if (inodeNumber != -1) {
+            break;
+        }
+    }
+    // Record inode if found   
+    return inodeNumber;
 }

@@ -1,48 +1,55 @@
-// fs.h: File System
-
 #pragma once
 
 #include "../disk/disk.h"
 
-#include <stdint.h>
-#include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
+#include <assert.h>
 
 #define MAGIC_NUMBER 0xf0f03410
 #define INODES_PER_BLOCK 128
 #define POINTERS_PER_INODE 10
 #define POINTERS_PER_BLOCK 1024
 
-typedef struct {		// Superblock structure
-    uint32_t MagicNumber;	// File system magic number
-    uint32_t Blocks;	// Number of blocks in file system
-    uint32_t InodeBlocks;	// Number of blocks reserved for inodes
-    uint32_t Inodes;	// Number of inodes in file system
-} SuperBlock;
+struct SuperBlock // Superblock structure
+{
+    uint32_t MagicNumber; // File system magic number
+    uint32_t Blocks; // Number of blocks in file system
+    uint32_t InodeBlocks; // Number of blocks reserved for inodes
+    uint32_t Inodes; // Number of inodes in file system
+} ;
 
-typedef struct {
-    uint32_t Valid;		// Whether or not inode is valid
-    uint32_t Size;		// Size of file
-    uint32_t Flag;
-    uint32_t children[16];
+struct Inode
+{
+    uint32_t Valid; // Whether or not inode is valid
+    uint32_t Size; // Size of file
+    uint32_t Flag; //0 for files, 1 for directory
+    uint32_t ChildList[10]; //list of child inodes
     int Direct[POINTERS_PER_INODE]; // Direct pointers
-    uint32_t Indirect;	// Indirect pointer
-} Inode;
+    uint32_t Indirect; // Indirect pointer
+} ;
 
-typedef union {
-    SuperBlock  Super;			    // Superblock
-    Inode	    Inodes[INODES_PER_BLOCK];	    // Inode block
-    int    Pointers[POINTERS_PER_BLOCK];   // Pointer block
-    char	    Data[BLOCK_SIZE];	    // Data block
-} Block;
+union Block
+{
+    struct SuperBlock  Super;
+    struct Inode       Inodes[INODES_PER_BLOCK];
+    int                Pointers[POINTERS_PER_BLOCK];
+    char               Data[BLOCK_SIZE];
+} ;
 
-uint32_t    numBlocks;
-uint32_t    inodeBlocks;
-uint32_t    inodes;
-bool *       freeBlocks;
+// uint32_t    numblocks;
+// uint32_t    inodeblocks;
+// uint32_t    inodes;
+// bool*       freeblocks;
 
-struct Disk        *fileSystemDisk;
+uint32_t numBlocks;
+uint32_t inodeBlocks;
+uint32_t inodes;
+bool* freeBlocks;
+
+struct Disk *fileSystemDisk; // = {0, 0, 0, 0, 0};
 
 void debug(struct Disk *disk);
 bool format(struct Disk *disk);
@@ -50,12 +57,12 @@ bool format(struct Disk *disk);
 bool mount(struct Disk *disk);
 bool unmount(struct Disk *disk);
 
-void initialize_inode(Inode node);
-bool load_inode(size_t inumber, Inode node);   
-bool save_inode(size_t inumber, Inode node);
+void initialize_inode(struct Inode *node);
+bool load_inode(size_t inumber, struct Inode node);   
+bool save_inode(size_t inumber, struct Inode node);
 size_t allocate_free_block();
 
-ssize_t create();
+ssize_t get_free_inode();
 bool    removeFile(size_t inumber);
 ssize_t stat(size_t inumber);
 

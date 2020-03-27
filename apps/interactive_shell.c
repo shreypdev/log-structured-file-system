@@ -9,6 +9,7 @@ void do_debug(struct Disk *disk, int args, char *arg1, char *arg2);
 void do_format(struct Disk *disk, int args, char *arg1, char *arg2);
 void do_mount(struct Disk *disk, int args, char *arg1, char *arg2);
 void do_unmount(struct Disk *disk, int args, char *arg1, char *arg2);
+void do_get_free_inode(struct Disk *disk, int args, char *arg1, char *arg2);
 
 // Main execution
 int main(int argc, char *argv[]) {
@@ -48,6 +49,8 @@ int main(int argc, char *argv[]) {
             do_mount(&disk, args, arg1, arg2);
         } else if (streq(cmd, "unmount")) {
             do_unmount(&disk, args, arg1, arg2);
+        } else if (streq(cmd, "get_free_inode")) {
+            do_get_free_inode(&disk, args, arg1, arg2);
         }
     }
 
@@ -101,5 +104,19 @@ void do_unmount(struct Disk *disk, int args, char *arg1, char *arg2) {
     	printf("disk unmounted.\n");
     } else {
     	printf("unmount failed!\n");
+    }
+}
+
+void do_get_free_inode(struct Disk *disk, int args, char *arg1, char *arg2) {
+    if (args != 1) {
+    	printf("Usage: get_free_inode\n");
+    	return;
+    }
+
+    ssize_t inumber = get_free_inode();
+    if (inumber >= 0) {
+    	printf("get_free_inode inode %ld.\n", inumber);
+    } else {
+    	printf("get_free_inode failed!\n");
     }
 }
