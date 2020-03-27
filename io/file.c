@@ -91,83 +91,83 @@ bool format(struct Disk *disk) {
 }
 
 // Mount file system -----------------------------------------------------------
-// bool mount(Disk disk) {
+bool mount(struct Disk *disk) {
     
-//     // if (disk != null){
-//     //     return false;
-//     // }   
+    if (fileSystemDisk){
+        return false;
+    }   
  
     
-//     // Read superblock
-//     Block superBlock;
-//     readDisk(disk, 0, superBlock.Data);
+    // Read superblock
+    Block superBlock;
+    readDisk(disk, 0, superBlock.Data);
     
-//     if (superBlock.Super.MagicNumber != MAGIC_NUMBER){
-//         return false;
-//     }   
+    if (superBlock.Super.MagicNumber != MAGIC_NUMBER){
+        return false;
+    }   
 
-//     if (size(disk) != superBlock.Super.Blocks){
-//         return false;
-//     }
+    if (size(disk) != superBlock.Super.Blocks){
+        return false;
+    }
     
-//     if (size(disk)%10 == 0){
-//         if (superBlock.Super.InodeBlocks != size(disk)/10){
-//             return false;
-//         }
-//     }else{
-//         if (superBlock.Super.InodeBlocks != size(disk)/10+1){
-//             return false;
-//         }
-//     }
+    if (size(disk)%10 == 0){
+        if (superBlock.Super.InodeBlocks != size(disk)/10){
+            return false;
+        }
+    }else{
+        if (superBlock.Super.InodeBlocks != size(disk)/10+1){
+            return false;
+        }
+    }
     
-//     if (superBlock.Super.Inodes != INODES_PER_BLOCK*superBlock.Super.InodeBlocks){
-//         return false;
-//     }
+    if (superBlock.Super.Inodes != INODES_PER_BLOCK*superBlock.Super.InodeBlocks){
+        return false;
+    }
 
-//     // Set device and mount
-//     disk = disk;
-//     mountDisk(disk);
+    // Set device and mount
+    fileSystemDisk = disk;
+    mountDisk(disk);
 
-//     // Copy metadata
-//     this->numBlocks     = superBlock.Super.Blocks;
-//     this->inodeBlocks   = superBlock.Super.InodeBlocks;
-//     this->inodes        = superBlock.Super.Inodes;
+    // Copy metadata
+    numBlocks     = superBlock.Super.Blocks;
+    inodeBlocks   = superBlock.Super.InodeBlocks;
+    inodes        = superBlock.Super.Inodes;
  
-//     // Allocate free block bitmap
-//     this->freeBlocks = new bool[this->numBlocks];
-//     for (uint32_t i = 0; i < this->numBlocks; i++){
-//         this->freeBlocks[i] = true;
-//     }
-//     this->freeBlocks[0] = false;
-//     for (uint32_t i = 0; i < this->inodeBlocks; i++){
-//         this->freeBlocks[i+1] = false;
-//     }
+    // Allocate free block bitmap
+    freeBlocks = (bool *)malloc(numBlocks);
+    for (uint32_t i = 0; i < numBlocks; i++){
+        freeBlocks[i] = true;
+    }
+    freeBlocks[0] = false;
+    for (uint32_t i = 0; i < inodeBlocks; i++){
+        freeBlocks[i+1] = false;
+    }
 
-//     Block inodeBlock;
-//     for (uint32_t i = 0; i < this->inodeBlocks; i++){
-//         //std::cout << "Block num: " << i << "\n";
-//         disk->read(i+1, inodeBlock.Data);
-//         for (uint32_t j = 0; j < INODES_PER_BLOCK; j++){
-//             if (inodeBlock.Inodes[j].Valid){
-//                 for (uint32_t k = 0; k < POINTERS_PER_INODE; k++){
-//                     if (inodeBlock.Inodes[j].Direct[k]){
-//                         this->freeBlocks[inodeBlock.Inodes[j].Direct[k]] = false;
-//                     }
-//                 }
-//                 if (inodeBlock.Inodes[j].Indirect){
-//                     this->freeBlocks[inodeBlock.Inodes[j].Indirect] = false;
-//                     Block indirectBlock;
-//                     disk->read(inodeBlock.Inodes[j].Indirect, indirectBlock.Data);
-//                     for (uint32_t k = 0; k < POINTERS_PER_BLOCK; k++){
-//                         if (indirectBlock.Pointers[k]){
-//                             this->freeBlocks[indirectBlock.Pointers[k]] = false;
-//                         }
-//                     } 
-//                 }
-//             }
-//         }
-//     }
+    Block inodeBlock;
+    for (uint32_t i = 0; i < inodeBlocks; i++){
+        //std::cout << "Block num: " << i << "\n";
+        readDisk(disk, i+1, inodeBlock.Data);
+        for (uint32_t j = 0; j < INODES_PER_BLOCK; j++){
+            if (inodeBlock.Inodes[j].Valid){
+                for (uint32_t k = 0; k < POINTERS_PER_INODE; k++){
+                    if (inodeBlock.Inodes[j].Direct[k]){
+                        freeBlocks[inodeBlock.Inodes[j].Direct[k]] = false;
+                    }
+                }
+                if (inodeBlock.Inodes[j].Indirect){
+                    freeBlocks[inodeBlock.Inodes[j].Indirect] = false;
+                    Block indirectBlock;
+                    readDisk(disk, inodeBlock.Inodes[j].Indirect, indirectBlock.Data);
+                    for (uint32_t k = 0; k < POINTERS_PER_BLOCK; k++){
+                        if (indirectBlock.Pointers[k]){
+                            freeBlocks[indirectBlock.Pointers[k]] = false;
+                        }
+                    } 
+                }
+            }
+        }
+    }
     
-//     return true;
-// }
+    return true;
+}
 

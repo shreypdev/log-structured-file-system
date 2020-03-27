@@ -7,6 +7,7 @@
 // Command prototypes
 void do_debug(struct Disk *disk, int args, char *arg1, char *arg2);
 void do_format(struct Disk *disk, int args, char *arg1, char *arg2);
+void do_mount(struct Disk *disk, int args, char *arg1, char *arg2);
 
 // Main execution
 int main(int argc, char *argv[]) {
@@ -42,6 +43,8 @@ int main(int argc, char *argv[]) {
             do_debug(&disk, args, arg1, arg2);
         } else if (streq(cmd, "format")) {
             do_format(&disk, args, arg1, arg2);
+        } else if (streq(cmd, "mount")) {
+            do_mount(&disk, args, arg1, arg2);
         }
     }
 
@@ -69,5 +72,18 @@ void do_format(struct Disk *disk, int args, char *arg1, char *arg2) {
     	printf("disk formatted.\n");
     } else {
     	printf("format failed!\n");
+    }
+}
+
+void do_mount(struct Disk *disk, int args, char *arg1, char *arg2) {
+    if (args != 1) {
+    	printf("Usage: mount\n");
+    	return;
+    }
+
+    if (mount(disk)) {
+    	printf("disk mounted.\n");
+    } else {
+    	printf("mount failed!\n");
     }
 }

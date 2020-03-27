@@ -42,7 +42,7 @@ uint32_t    inodeBlocks;
 uint32_t    inodes;
 bool *       freeBlocks;
 
-struct Disk        *disk;
+struct Disk        *fileSystemDisk;
 
 void debug(struct Disk *disk);
 bool format(struct Disk *disk);
