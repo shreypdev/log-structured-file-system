@@ -11,15 +11,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-const int NUM_BLOCKS = 4096;
-const int INODE_SIZE = 32;
-
-int NUM_INODE = 0;
-int root_inode_index = -1;
-int magic_number = 1;
-int mapping_block_start = 9; 	// ( block 9-24 for inode #1 - #2048 )
-int x=1;
-
 void create_superblock( FILE* disk );
 
 void read_superblock( FILE* disk );
