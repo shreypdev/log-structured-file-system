@@ -23,7 +23,9 @@ void debug(struct Disk *disk) {
         for (uint32_t j=0; j< numInodes; j++){
             if (inodeBlock.Inodes[j].Valid){
                 printf("Inode %d:\n", j+i*numInodes);
+                printf("    flag: %d\n", inodeBlock.Inodes[j].Flag);
                 printf("    size: %d bytes\n", inodeBlock.Inodes[j].Size);
+                printf("    name: %s\n", inodeBlock.Inodes[j].Name);
                 //uint32_t directCounter = 0;
                 char *directBlockString = "    direct blocks:";
                 bool directFlag = false;
@@ -204,6 +206,7 @@ ssize_t get_free_inode() {
                 inodeBlock.Inodes[j].Valid = 1;
                 initialize_inode(&inodeBlock.Inodes[j]);
                 writeDisk(fileSystemDisk, i+1, inodeBlock.Data);
+                printf("I am registered in disk");
                 inodeNumber = j+INODES_PER_BLOCK*i;
                 break;
             }
@@ -214,4 +217,120 @@ ssize_t get_free_inode() {
     }
     // Record inode if found   
     return inodeNumber;
+}
+
+ssize_t validatePathAndGetLastInodeID(char **pathAsArray, int pathAsArrayLength) {
+    ssize_t currentWorkingInodeID = 0;
+    for(int i=1; i<pathAsArrayLength-1; i++){
+        struct Inode loadedInode;
+        if(!load_inode(currentWorkingInodeID, &loadedInode)){
+            return -1;
+        }
+        for(int j=0; j<sizeof(loadedInode.ChildList) / sizeof(loadedInode.ChildList[0]); j++){
+            ssize_t currentChildInodeID = (ssize_t) loadedInode.ChildList[j];
+            struct Inode loadedCurrentChildInode;
+            if(!load_inode(currentChildInodeID, &loadedCurrentChildInode)){
+                return -1;
+            }
+            printf("%ld", currentChildInodeID);
+            printf("%s", pathAsArray[i]);
+            printf("%s, ", loadedCurrentChildInode.Name);
+            if(strcmp(loadedCurrentChildInode.Name, pathAsArray[i]) == 0){
+                currentWorkingInodeID = currentChildInodeID;
+                break;
+            }
+        }
+    }
+    return currentWorkingInodeID;
+}
+
+bool makeDir(char *path) {
+
+    //  splitting path in an array
+    char *pathAsArray[CHILD_AND_DEPTH];
+    int length = 0;
+
+    char *p = strtok (path, "/");
+    while (p != NULL)
+    {
+        pathAsArray[length++] = p;
+        p = strtok (NULL, "/");
+    }
+
+    //  validate the given path and requesting InodeID of the last dir in which we will create new dir
+    ssize_t lastInodeID = validatePathAndGetLastInodeID(pathAsArray, length);
+    if(lastInodeID < 0){
+        printf("Invallid Path");
+        return false;
+    }
+
+    //  get next free inode
+    ssize_t inodeID = get_free_inode();
+    if(inodeID < 0){
+        printf("File System Error: invalid inode recieved");
+        return false;
+    }
+
+    //  load new inode to add metadata and then save
+    struct Inode loadedInode;
+    if(!load_inode(inodeID, &loadedInode)){
+        printf("File System Error: not able to load newly created inode");
+        return false;
+    }
+
+    loadedInode.Flag = 0;
+    loadedInode.Name = pathAsArray[length-1];
+    loadedInode.Size = 0;
+
+    if(!save_inode(inodeID, &loadedInode)){
+        printf("File System Error: not able to save newly created inode");
+        return false;
+    }
+
+    //  update metadata "children" of parent dir
+    if(inodeID > 0){
+        
+        struct Inode loadedLastInode;
+        if(!load_inode(lastInodeID, &loadedLastInode)){
+            printf("File System Error: not able to load parent inode");
+            return false;
+        }
+        int ChildListLen = -1;
+        while (loadedLastInode.ChildList[++ChildListLen] != 0) { /* do nothing */}
+        loadedLastInode.ChildList[ChildListLen] = (uint32_t)inodeID;
+
+        if(!save_inode(lastInodeID, &loadedLastInode)){
+            printf("File System Error: not able to save parent inode");
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+bool load_inode(size_t inumber, struct Inode *node) {
+    union Block nodeBlock;
+    readDisk(fileSystemDisk, inumber/INODES_PER_BLOCK+1, nodeBlock.Data);
+    *node = nodeBlock.Inodes[inumber%INODES_PER_BLOCK];
+    if (node->Valid) {
+        return true;
+    }
+    return false;
+} 
+
+bool save_inode(size_t inumber, struct Inode *node){
+ 
+    union Block nodeBlock;
+    readDisk(fileSystemDisk, inumber/INODES_PER_BLOCK+1, nodeBlock.Data);
+    nodeBlock.Inodes[inumber%INODES_PER_BLOCK] = *node;
+
+    // union Block indirectBlock;
+    // readDisk(fileSystemDisk, node->Indirect, indirectBlock.Data);
+    
+    writeDisk(fileSystemDisk, inumber/INODES_PER_BLOCK+1, nodeBlock.Data);
+    
+    if (node->Valid) {
+        return true;
+    }
+    return false;
 }

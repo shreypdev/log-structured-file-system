@@ -12,6 +12,7 @@
 #define INODES_PER_BLOCK 128
 #define POINTERS_PER_INODE 10
 #define POINTERS_PER_BLOCK 1024
+#define CHILD_AND_DEPTH 16
 
 struct SuperBlock // Superblock structure
 {
@@ -19,17 +20,18 @@ struct SuperBlock // Superblock structure
     uint32_t Blocks; // Number of blocks in file system
     uint32_t InodeBlocks; // Number of blocks reserved for inodes
     uint32_t Inodes; // Number of inodes in file system
-} ;
+};
 
 struct Inode
 {
     uint32_t Valid; // Whether or not inode is valid
+    char *Name;
     uint32_t Size; // Size of file
     uint32_t Flag; //0 for files, 1 for directory
-    uint32_t ChildList[10]; //list of child inodes
+    uint32_t ChildList[CHILD_AND_DEPTH]; //list of child inodes
     int Direct[POINTERS_PER_INODE]; // Direct pointers
     uint32_t Indirect; // Indirect pointer
-} ;
+};
 
 union Block
 {
@@ -37,7 +39,7 @@ union Block
     struct Inode       Inodes[INODES_PER_BLOCK];
     int                Pointers[POINTERS_PER_BLOCK];
     char               Data[BLOCK_SIZE];
-} ;
+};
 
 // uint32_t    numblocks;
 // uint32_t    inodeblocks;
@@ -58,11 +60,16 @@ bool mount(struct Disk *disk);
 bool unmount(struct Disk *disk);
 
 void initialize_inode(struct Inode *node);
-bool load_inode(size_t inumber, struct Inode node);   
-bool save_inode(size_t inumber, struct Inode node);
+ssize_t get_free_inode();
+
+ssize_t validatePathAndGetLastInodeID(char **pathAsArray, int pathAsArrayLength);
+bool makeDir(char *path);
+
+bool load_inode(size_t inumber, struct Inode *node);   
+bool save_inode(size_t inumber, struct Inode *node);
 size_t allocate_free_block();
 
-ssize_t get_free_inode();
+
 bool    removeFile(size_t inumber);
 ssize_t stat(size_t inumber);
 

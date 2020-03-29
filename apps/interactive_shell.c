@@ -10,6 +10,7 @@ void do_format(struct Disk *disk, int args, char *arg1, char *arg2);
 void do_mount(struct Disk *disk, int args, char *arg1, char *arg2);
 void do_unmount(struct Disk *disk, int args, char *arg1, char *arg2);
 void do_get_free_inode(struct Disk *disk, int args, char *arg1, char *arg2);
+void do_mkdir(struct Disk *disk, int args, char *arg1, char *arg2);
 
 // Main execution
 int main(int argc, char *argv[]) {
@@ -51,6 +52,9 @@ int main(int argc, char *argv[]) {
             do_unmount(&disk, args, arg1, arg2);
         } else if (streq(cmd, "get_free_inode")) {
             do_get_free_inode(&disk, args, arg1, arg2);
+        }
+         else if (streq(cmd, "mkdir")) {
+            do_mkdir(&disk, args, arg1, arg2);
         }
     }
 
@@ -118,5 +122,18 @@ void do_get_free_inode(struct Disk *disk, int args, char *arg1, char *arg2) {
     	printf("get_free_inode inode %ld.\n", inumber);
     } else {
     	printf("get_free_inode failed!\n");
+    }
+}
+
+void do_mkdir(struct Disk *disk, int args, char *arg1, char *arg2) {
+    if (args != 2) {
+    	printf("Usage: mkdir <path>\n");
+    	return;
+    }
+
+    if (makeDir(arg1)) {
+    	printf("directory created.\n");
+    } else {
+    	printf("mkdir failed!\n");
     }
 }
