@@ -7,25 +7,14 @@ $(info TESTFILES are $(TESTFILES))
 TESTS := $(TESTFILES:apps/%.c=%)
 $(info TESTS are $(TESTS))
 
-all: $(TESTS) interactive_shell disk.o File_Helper.o File.o
+all: $(TESTS)
 
-test%: apps/test%.c disk/disk.o io/file.o
+test%: apps/test%.c
 	$(CC) $(CFLAGS) -o apps/$@ $^
-
-interactive_shell: apps/interactive_shell.c disk/disk.o io/File_Helper.o io/File.o
-	$(CC) $(CFLAGS) -o apps/$@ $^
-
-disk.o: disk/disk.c disk/disk.h
-	$(CC) $(CFLAGS) -c -o disk/$@ $<
-
-File_Helper.o: io/File_Helper.c io/File_Helper.h
-	$(CC) $(CFLAGS) -c -o io/$@ $<
-
-File.o: io/File.c io/File.h
-	$(CC) $(CFLAGS) -c -o io/$@ $<
 
 run:
-	./apps/interactive_shell ./disk/vdisk
+	./apps/test1
+	./apps/test2
 
 .PHONY: clean
 
