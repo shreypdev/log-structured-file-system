@@ -56,12 +56,52 @@ int main(int argc, char *argv[]) {
     	    continue;
 	    }
 
+		strcpy(line, strtok(line, "\n"));
+
         if (streq(cmd, "Mkdir")) {
 			if (args != 2) {
 				printf("Usage: Mkdir <path>\n");
-				return EXIT_FAILURE;
+				continue;
 			}
-			strcpy(line, strtok(line, "\n"));
+
+			command_input ( disk, line, line );
+        } else if (streq(cmd, "Writefile")) {
+			if (args != 2) {
+				printf("Usage: Writefile <path>\n");
+				continue;
+			}
+
+			char content[BUFSIZ];
+			printf("Enter content: ");
+    		fgets(content, BUFSIZ, stdin);
+			
+			command_input ( disk, line, content );
+        } else if (streq(cmd, "Open")) {
+			if (args != 2) {
+				printf("Usage: Open <path>\n");
+				continue;
+			}
+			
+			command_input ( disk, line, line );
+        } else if (streq(cmd, "Rmfile")) {
+			if (args != 2) {
+				printf("Usage: Rmfile <path>\n");
+				continue;
+			}
+			
+			command_input ( disk, line, line );
+        } else if (streq(cmd, "Rmdir")) {
+			if (args != 2) {
+				printf("Usage: Rmdir <path>\n");
+				continue;
+			}
+			
+			command_input ( disk, line, line );
+        } else if (streq(cmd, "list")) {
+			if (args != 2) {
+				printf("Usage: list <path>\n");
+				continue;
+			}
 			
 			command_input ( disk, line, line );
         }
