@@ -45,5 +45,5 @@ FILE* disk;
 	//		     we have to change: FILE* disk = fopen("../disk/vdisk", "wb+")
 	
 	fclose(disk);
-    return 0;
+   return 0;
 }
