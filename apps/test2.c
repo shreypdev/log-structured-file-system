@@ -8,7 +8,7 @@
 
 int main(int argc, char* argv[]) {
 	
-FILE* disk;	
+	FILE* disk;	
 
 	if ( fopen("./disk/vdisk", "r") == NULL ){
 		

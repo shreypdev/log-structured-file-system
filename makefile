@@ -7,14 +7,20 @@ $(info TESTFILES are $(TESTFILES))
 TESTS := $(TESTFILES:apps/%.c=%)
 $(info TESTS are $(TESTS))
 
-all: $(TESTS)
+all: $(TESTS) interactive-shell
 
 test%: apps/test%.c
 	$(CC) $(CFLAGS) -o apps/$@ $^
 
-run:
+interactive-shell: apps/interactive-shell.c
+	$(CC) $(CFLAGS) -o apps/$@ $^
+
+run-test:
 	./apps/test1
 	./apps/test2
+
+run-shell:
+	./apps/interactive-shell vdisk
 
 .PHONY: clean
 
