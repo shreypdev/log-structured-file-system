@@ -1,0 +1,37 @@
+implementing a log file system
+		  
+simple structure of LLFS:	Block 1	Superblock
+                           Block 2-8 free block vectors
+                           Block 9-24 inode mapping
+							
+structure of superblock: 	magic_number(4bytes)
+                           NUM_BLOCKS(4bytes)
+                           NUM_INODE(4bytes) 
+                           root_inode_index(4bytes) 
+                           robust data(62bytes)
+							
+structure of inode, directory: following the assignment suggestions
+
+Robust:  backup metadata (inode - size+flag), and save the last command compiled as record in the superblock, 
+	
+         then everytime when we open vdisk (simulating the situation of program crashed and restart), 
+         
+         we will first check the history record of last compile command, then it will tell the user if last compile 
+         
+         success or fail. If fail, it will pop up *something is lost after the last compile*.
+         
+         If last compile command = Writefile/Mkdir/delete_dir/delete_file, we will check vdisk's 
+         
+         content with the use of inode metadata's file_size value. 
+
+         Secondly, with respect to the goal of this assignment, we able to set up a timer in thread to process and update of information into vdisk.
+   
+         Lastly, balancing the cost of updating disk, there are some function I implemented to make it robust:
+		
+         1. backup metadata - compare to previous history to find out if any data lost.
+                              e.g. function: robust_check(), comparing_last_compile(), etc
+                              
+                              output: ****vdisk is up to date, previous compile successfully****
+                           
+         2.) avoid the use of local/global variables -   most of the data are extract from disk, and update the disk immediately if data is modified.
+                                                         e.g. function: update_superblock(), read_superblock(), get_root_inode_index()

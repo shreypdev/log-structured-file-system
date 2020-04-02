@@ -20,7 +20,7 @@ run-test:
 	./apps/test2
 
 run-shell:
-	./apps/interactive-shell vdisk
+	./apps/interactive-shell
 
 .PHONY: clean
 

@@ -12,31 +12,28 @@
 // Main execution
 int main(int argc, char *argv[]) {
 
-    if (argc != 2) {
-    	fprintf(stderr, "Usage: %s <diskfile>\n", argv[0]);
-    	return EXIT_FAILURE;
-    }
+   FILE* disk;	
 
-    FILE* disk;	
+	char* diskPath = "./disk/vdisk";
 
-	if ( fopen("./disk/vdisk", "r") == NULL ){
+	if ( fopen(diskPath, "r") == NULL ){
 		
 		printf( "\n we can't find the old vdisk file, so we will create new one\n");
 		printf( " -------------------------------------------------------------------- \n\n" );
 		
-		disk = fopen("./disk/vdisk", "wb+"); // Open the file to be written to in binary mode
+		disk = fopen(diskPath, "wb+"); // Open the file to be written to in binary mode
 	
 		char* init = calloc(BLOCK_SIZE*NUM_BLOCKS, 1);
 		fwrite(init, BLOCK_SIZE*NUM_BLOCKS, 1, disk);
 		free(init);
 		initLLFS( disk );
 		fclose(disk);
-		disk = fopen("./disk/vdisk", "rb+"); // create the file to be written to in binary mode
+		disk = fopen(diskPath, "rb+"); // create the file to be written to in binary mode
 		robust_check (disk);
 		read_superblock ( disk );
 	} else {
 		
-		disk = fopen("./disk/vdisk", "rb+"); // create the file to be written to in binary mode
+		disk = fopen(diskPath, "rb+"); // create the file to be written to in binary mode
 		robust_check (disk);
 		read_superblock ( disk );
 	}
